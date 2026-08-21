@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aliya English — рабочая тетрадь</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#22392c;
+    --paper:#f7f3e6;
+    --paper-line:#e3dcc6;
+    --ink:#20291f;
+    --chalk-yellow:#f0c93b;
+    --chalk-pink:#e79bbd;
+    --chalk-blue:#8fc1d9;
+    --chalk-white:#f4f1e6;
+    --good:#4f9d69;
+    --bad:#c76a5f;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--board);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(255,255,255,0.035) 0, transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(255,255,255,0.03) 0, transparent 40%);
+    color:var(--chalk-white);
+    font-family:'Nunito',sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Caveat',cursive; font-weight:700;}
+  .hidden{display:none !important;}
+
+  /* ---------- GATE (login) ---------- */
+  #gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .gate-box{
+    width:100%;
+    max-width:420px;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:18px;
+    padding:32px 30px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+    background-image:repeating-linear-gradient(180deg, transparent 0 30px, var(--paper-line) 31px);
+  }
+  .gate-title{font-size:2.2rem; margin:0 0 4px; color:#2c4a36;}
+  .gate-sub{font-size:0.88rem; color:#7a6f52; margin:0 0 22px;}
+  .gate-tabs{display:flex; gap:6px; margin-bottom:20px;}
+  .gate-tab{
+    flex:1; text-align:center; padding:9px; border-radius:9px;
+    font-weight:700; font-size:0.85rem; cursor:pointer;
+    background:#fff; border:2px solid var(--paper-line); color:#7a6f52;
+  }
+  .gate-tab.active{background:#2c4a36; color:#fff; border-color:#2c4a36;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:0.78rem; font-weight:700; color:#7a6f52; margin-bottom:4px; text-transform:uppercase; letter-spacing:.05em;}
+  .field input{
+    width:100%; padding:11px 12px; border-radius:9px;
+    border:2px solid var(--paper-line); font-family:'Nunito',sans-serif; font-size:1rem;
+  }
+  .field input:focus{outline:none; border-color:#4f9d69;}
+  .gate-btn{
+    width:100%; padding:12px; border:none; border-radius:9px;
+    background:#2c4a36; color:#fff; font-weight:800; font-size:0.95rem; cursor:pointer;
+    font-family:'Nunito',sans-serif; margin-top:4px;
+  }
+  .gate-btn:hover{background:#38603f;}
+  .gate-msg{font-size:0.84rem; margin-top:10px; min-height:18px;}
+  .gate-msg.err{color:#b23c30;}
+  .gate-msg.ok{color:#3c7a4f;}
+  .gate-hint{font-size:0.76rem; color:#9a9276; margin-top:16px; line-height:1.5;}
+
+  /* ---------- SHELL (after login) ---------- */
+  #shell{display:none; min-height:100vh;}
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px; border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .topbar{gap:16px;}
+  .topbrand{font-family:'Caveat',cursive; font-size:1.4rem; color:var(--chalk-yellow); margin-right:auto;}
+  .whoami{font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:rgba(244,241,230,0.7);}
+  .whoami b{color:var(--chalk-yellow);}
+  .topbtn{
+    background:transparent; border:2px solid rgba(244,241,230,0.25); color:var(--chalk-white);
+    padding:6px 14px; border-radius:8px; font-weight:700; font-size:0.8rem; cursor:pointer; font-family:'Nunito',sans-serif;
+  }
+  .topbtn:hover{border-color:var(--chalk-yellow); color:var(--chalk-yellow);}
+
+  /* ---------- LESSON MENU ---------- */
+  #menuScreen{max-width:900px; margin:0 auto; padding:40px 24px;}
+  .menu-title{font-size:2.6rem; color:var(--chalk-white); margin:0 0 6px;}
+  .menu-sub{color:rgba(244,241,230,0.7); margin:0 0 28px;}
+  .lesson-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
+  .lesson-card{
+    background:var(--paper); color:var(--ink); border-radius:14px; padding:20px;
+    box-shadow:0 10px 24px rgba(0,0,0,0.2); cursor:pointer; position:relative;
+    transition:transform .15s;
+  }
+  .lesson-card:hover{transform:translateY(-2px);}
+  .lesson-card.locked{opacity:0.5; cursor:default;}
+  .lesson-card.locked:hover{transform:none;}
+  .lesson-num{font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:#8a7a3a; text-transform:uppercase; letter-spacing:.1em;}
+  .lesson-name{font-family:'Caveat',cursive; font-size:1.6rem; color:#2c4a36; margin:4px 0 8px;}
+  .lesson-desc{font-size:0.85rem; color:#6b6350; margin-bottom:12px; line-height:1.4;}
+  .lesson-progress-bar{height:6px; border-radius:6px; background:#e6e0cc; overflow:hidden;}
+  .lesson-progress-fill{height:100%; background:linear-gradient(90deg,#4f9d69,#8fc1d9);}
+  .lesson-progress-label{font-family:'JetBrains Mono',monospace; font-size:0.68rem; color:#8a7a3a; margin-top:6px;}
+
+  /* ---------- LESSON APP (reuses notebook look) ---------- */
+  #lessonApp{display:none;}
+  .app{display:flex; max-width:1180px; margin:0 auto;}
+  .rail{width:230px; flex-shrink:0; padding:20px 10px 26px 20px; position:sticky; top:0; align-self:flex-start; height:calc(100vh - 58px); overflow-y:auto;}
+  .brand{font-size:1.6rem; color:var(--chalk-yellow); margin:0 0 4px 4px; line-height:1.1;}
+  .brand small{display:block; font-family:'JetBrains Mono',monospace; font-size:0.6rem; letter-spacing:.14em; color:rgba(244,241,230,0.5); text-transform:uppercase; margin-top:2px;}
+  .trail{height:5px; border-radius:6px; background:rgba(255,255,255,0.08); margin:14px 4px 18px; overflow:hidden;}
+  .trail-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--chalk-yellow),var(--chalk-pink)); transition:width .5s ease;}
+  nav.tabs{display:flex; flex-direction:column; gap:3px;}
+  .tab{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:9px; cursor:pointer; font-weight:700; font-size:0.84rem; color:rgba(244,241,230,0.65); border:1px dashed transparent; transition:background .15s, color .15s, border-color .15s;}
+  .tab:hover{background:rgba(255,255,255,0.05); color:var(--chalk-white);}
+  .tab.active{background:rgba(240,201,59,0.12); border-color:rgba(240,201,59,0.4); color:var(--chalk-yellow);}
+  .tab .num{font-family:'JetBrains Mono',monospace; font-size:0.66rem; width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.08); flex-shrink:0;}
+  .tab.done .num{background:var(--good); color:#0e1a12;}
+  .tab.active .num{background:var(--chalk-yellow); color:#221a05;}
+  main{flex:1; padding:30px 34px 80px; min-width:0;}
+  .page{display:none; animation:fade .35s ease;}
+  .page.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:.16em; text-transform:uppercase; color:var(--chalk-blue); margin-bottom:6px;}
+  h1.page-title{font-size:2.5rem; color:var(--chalk-white); margin:0 0 16px; line-height:1;}
+  .lead{font-size:1rem; color:rgba(244,241,230,0.78); max-width:640px; margin:0 0 24px; line-height:1.55;}
+  .say-bubble{background:rgba(143,193,217,0.12); border:1px dashed rgba(143,193,217,0.5); border-radius:var(--radius); padding:14px 18px; font-style:italic; color:var(--chalk-blue); margin-bottom:22px; max-width:640px;}
+  .card{background:var(--paper); color:var(--ink); border-radius:var(--radius); padding:22px 24px; margin-bottom:18px; box-shadow:0 10px 24px rgba(0,0,0,0.22); background-image:repeating-linear-gradient(180deg, transparent 0 30px, var(--paper-line) 31px);}
+  .card h3{margin-top:0; font-size:1.4rem; color:#2c4a36;}
+  .card p{line-height:1.6;}
+  .warmup-item{display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px dashed var(--paper-line);}
+  .warmup-item:last-child{border-bottom:none;}
+  .warmup-item .qn{font-family:'JetBrains Mono',monospace; font-weight:700; color:#8a7a3a; padding-top:6px;}
+  .warmup-item input[type=text]{flex:1; border:none; border-bottom:2px solid var(--paper-line); background:transparent; font-family:'Nunito',sans-serif; font-size:0.95rem; padding:6px 2px; color:var(--ink);}
+  .warmup-item input:focus{outline:none; border-bottom-color:#4f9d69;}
+  .mcq{margin-bottom:20px; padding-bottom:16px; border-bottom:1px dashed var(--paper-line);}
+  .mcq:last-child{border:none; margin-bottom:0;}
+  .mcq .qtext{font-weight:700; margin-bottom:8px;}
+  .opts{display:flex; flex-wrap:wrap; gap:8px;}
+  .opt{border:2px solid var(--paper-line); background:#fff; border-radius:9px; padding:7px 14px; cursor:pointer; font-family:'Nunito',sans-serif; font-weight:600; font-size:0.9rem; color:var(--ink); transition:all .15s;}
+  .opt:hover{border-color:#4f9d69;}
+  .opt.correct{background:var(--good); border-color:var(--good); color:#fff;}
+  .opt.wrong{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .opt.disabled{pointer-events:none;}
+  .fillrow{display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;}
+  .fillrow .prompt{min-width:230px; font-weight:600;}
+  .fillrow input[type=text]{border:2px solid var(--paper-line); border-radius:8px; padding:6px 10px; font-family:'Nunito',sans-serif; font-size:0.9rem; width:190px;}
+  .fillrow input.ok{border-color:var(--good); background:#eef8ef;}
+  .fillrow input.bad{border-color:var(--bad); background:#fbecea;}
+  .checkbtn, .revealbtn{border:none; border-radius:8px; padding:7px 14px; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.82rem; cursor:pointer; background:#2c4a36; color:#fff; transition:transform .1s, background .15s;}
+  .checkbtn:hover, .revealbtn:hover{transform:translateY(-1px); background:#38603f;}
+  .revealbtn{background:transparent; color:#8a7a3a; border:1.5px dashed #8a7a3a;}
+  .answer-reveal{display:none; font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:#2c4a36; background:#eef2e3; padding:6px 10px; border-radius:6px; margin-top:6px;}
+  .answer-reveal.show{display:inline-block;}
+  .flash-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:14px;}
+  .flash{background:#fff; border-radius:11px; padding:16px; min-height:92px; display:flex; flex-direction:column; justify-content:center; gap:6px; box-shadow:0 3px 8px rgba(0,0,0,0.08); cursor:pointer; border:2px solid transparent; transition:border-color .15s;}
+  .flash:hover{border-color:#4f9d69;}
+  .flash .front{font-weight:800; font-size:1.05rem; color:#2c4a36;}
+  .flash .back{font-size:0.85rem; color:#7a6f52; display:none;}
+  .flash.flipped .back{display:block;}
+  .flash .hint{font-family:'JetBrains Mono',monospace; font-size:0.65rem; color:#b0a884;}
+  .reading-text{font-size:1.02rem; line-height:1.75; background:#fff; padding:18px 20px; border-radius:11px; margin-bottom:20px; color:#2a3a2c;}
+  textarea{width:100%; min-height:70px; border:2px solid var(--paper-line); border-radius:8px; padding:10px; font-family:'Nunito',sans-serif; font-size:0.92rem; resize:vertical;}
+  .theory-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  @media(max-width:800px){.theory-grid{grid-template-columns:1fr;}}
+  .theory-col h4{margin:0 0 8px; font-family:'Caveat',cursive; font-size:1.3rem; color:#2c4a36;}
+  .theory-col p{margin:2px 0; font-family:'JetBrains Mono',monospace; font-size:0.86rem;}
+  .markers{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;}
+  .marker-chip{background:#fff2ce; color:#7a5b12; border:1px solid #e9d38b; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:700;}
+  .score-badge{display:inline-flex; align-items:center; gap:8px; background:rgba(240,201,59,0.14); border:1px solid rgba(240,201,59,0.5); color:var(--chalk-yellow); padding:6px 14px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-size:0.82rem; margin-bottom:18px;}
+  .homework-list{list-style:none; padding:0; margin:0;}
+  .homework-list li{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px dashed var(--paper-line);}
+  .homework-list li:last-child{border:none;}
+  .homework-list input[type=checkbox]{margin-top:4px; width:16px; height:16px; accent-color:#4f9d69;}
+  .hw-label.checked{text-decoration:line-through; color:#9a9276;}
+  .footer-nav{display:flex; justify-content:space-between; margin-top:28px;}
+  .footer-nav button{background:transparent; border:2px solid rgba(244,241,230,0.25); color:var(--chalk-white); padding:9px 18px; border-radius:9px; font-family:'Nunito',sans-serif; font-weight:700; cursor:pointer;}
+  .footer-nav button:hover{border-color:var(--chalk-yellow); color:var(--chalk-yellow);}
+  .footer-nav button:disabled{opacity:0.25; cursor:default;}
+  .savepill{position:fixed; bottom:18px; right:18px; background:#2c4a36; color:#e9f5ec; font-family:'JetBrains Mono',monospace; font-size:0.72rem; padding:7px 14px; border-radius:20px; opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s; pointer-events:none; max-width:280px; text-align:right;}
+  .savepill.show{opacity:1; transform:translateY(0);}
+  .savepill.err{background:var(--bad);}
+
+  /* ---------- TEACHER DASHBOARD ---------- */
+  #teacherScreen{max-width:1000px; margin:0 auto; padding:40px 24px; display:none;}
+  .t-table{width:100%; border-collapse:collapse; background:var(--paper); border-radius:14px; overflow:hidden; box-shadow:0 10px 24px rgba(0,0,0,0.2);}
+  .t-table th, .t-table td{padding:12px 16px; text-align:left; color:var(--ink); font-size:0.88rem;}
+  .t-table th{background:#e6e0cc; font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:.06em; color:#5c5540;}
+  .t-table tr:nth-child(even) td{background:#fbf9f2;}
+  .t-empty{color:rgba(244,241,230,0.6); font-family:'JetBrains Mono',monospace; font-size:0.85rem; padding:30px; text-align:center;}
+  .t-head-row{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:18px;}
+  .t-stats{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;}
+  .t-stat{background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px 18px;}
+  .t-stat .num{font-family:'Caveat',cursive; font-size:1.9rem; color:var(--chalk-yellow); line-height:1;}
+  .t-stat .lbl{font-family:'JetBrains Mono',monospace; font-size:0.66rem; color:rgba(244,241,230,0.6); text-transform:uppercase; letter-spacing:.08em; margin-top:2px;}
+  .t-table tr.clickable{cursor:pointer;}
+  .t-table tr.clickable:hover td{background:#f0ecd9;}
+  .detail-header{display:flex; align-items:baseline; gap:14px; margin:18px 0 20px; flex-wrap:wrap;}
+  .detail-header h2{margin:0; color:var(--chalk-white); font-size:2.2rem;}
+  .detail-header .detail-score{font-family:'JetBrains Mono',monospace; color:var(--chalk-yellow); font-size:0.9rem;}
+  .d-section{background:var(--paper); color:var(--ink); border-radius:14px; padding:20px 22px; margin-bottom:16px; box-shadow:0 8px 20px rgba(0,0,0,0.18);}
+  .d-section h3{margin:0 0 12px; font-size:1.35rem; color:#2c4a36;}
+  .d-row{display:flex; gap:10px; padding:7px 0; border-bottom:1px dashed var(--paper-line); font-size:0.87rem; align-items:flex-start;}
+  .d-row:last-child{border-bottom:none;}
+  .d-row .d-q{flex:1; min-width:0;}
+  .d-row .d-a{font-family:'JetBrains Mono',monospace; font-weight:700; white-space:nowrap;}
+  .d-row .d-a.ok{color:var(--good);}
+  .d-row .d-a.bad{color:var(--bad);}
+  .d-row .d-a.empty{color:#b0a884; font-weight:400;}
+  .d-note{width:100%; min-height:80px; border:2px solid var(--paper-line); border-radius:8px; padding:10px; font-family:'Nunito',sans-serif; font-size:0.9rem; resize:vertical;}
+  .guide-card{background:var(--paper); color:var(--ink); border-radius:14px; padding:20px 22px; margin-bottom:14px; box-shadow:0 8px 20px rgba(0,0,0,0.18);}
+  .guide-card h3{margin:0 0 8px; font-size:1.3rem; color:#2c4a36;}
+  .guide-say{background:rgba(79,157,105,0.1); border:1px dashed rgba(79,157,105,0.5); border-radius:10px; padding:10px 14px; font-style:italic; margin:8px 0;}
+
+  @media(max-width:860px){
+    .app{flex-direction:column;}
+    .rail{width:100%; height:auto; position:relative; padding:16px;}
+    nav.tabs{flex-direction:row; flex-wrap:wrap;}
+    main{padding:20px 18px 60px;}
+    h1.page-title{font-size:2rem;}
+    .topbar{padding:12px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================= GATE ======================= -->
+<div id="gate">
+  <div class="gate-box">
+    <h1 class="gate-title">Aliya English</h1>
+    <p class="gate-sub">Рабочая тетрадь по английскому языку</p>
+    <div class="gate-tabs">
+      <div class="gate-tab active" data-role="student">Я ученик</div>
+      <div class="gate-tab" data-role="teacher">Я преподаватель</div>
+    </div>
+
+    <!-- student login -->
+    <div id="studentForm">
+      <div class="field">
+        <label>Имя</label>
+        <input type="text" id="stName" placeholder="например, Катя" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>PIN-код (4 цифры)</label>
+        <input type="password" id="stPin" placeholder="••••" maxlength="6" inputmode="numeric">
+      </div>
+      <button class="gate-btn" id="stEnterBtn">Войти</button>
+      <p class="gate-msg" id="stMsg"></p>
+      <p class="gate-hint">Если заходишь первый раз — просто придумай PIN, он сохранится за твоим именем. В следующий раз входи с тем же именем и PIN, и весь прогресс будет на месте.</p>
+    </div>
+
+    <!-- teacher login -->
+    <div id="teacherForm" class="hidden">
+      <div class="field">
+        <label>PIN преподавателя</label>
+        <input type="password" id="tPin" placeholder="••••" maxlength="8" inputmode="numeric">
+      </div>
+      <button class="gate-btn" id="tEnterBtn">Войти в панель</button>
+      <p class="gate-msg" id="tMsg"></p>
+      <p class="gate-hint" id="tHint">Если панель открывается впервые — придумай PIN преподавателя, он сохранится для всех будущих входов.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= SHELL ======================= -->
+<div id="shell">
+  <div class="topbar">
+    <span class="topbrand">Aliya English</span>
+    <span class="whoami" id="whoami"></span>
+    <button class="topbtn" id="logoutBtn">Выйти</button>
+  </div>
+
+  <!-- lesson menu -->
+  <div id="menuScreen">
+    <h2 class="menu-title">Мои уроки</h2>
+    <p class="menu-sub">Выбери урок, чтобы продолжить</p>
+    <div class="lesson-grid" id="lessonGrid"></div>
+  </div>
+
+  <!-- teacher dashboard -->
+  <div id="teacherScreen">
+    <div id="teacherListView">
+      <div class="t-head-row">
+        <div>
+          <h2 class="menu-title">Панель преподавателя</h2>
+          <p class="menu-sub">Прогресс всех учеников · нажми на строку, чтобы открыть детали</p>
+        </div>
+        <button class="topbtn" id="openGuideBtn">Конспект урока 1</button>
+      </div>
+      <div class="t-stats" id="teacherStats"></div>
+      <div id="teacherTableWrap"></div>
+    </div>
+
+    <div id="teacherDetailView" class="hidden">
+      <button class="topbtn" id="backToTableBtn">← Ко всем ученикам</button>
+      <div id="detailContent"></div>
+    </div>
+
+    <div id="teacherGuideView" class="hidden">
+      <button class="topbtn" id="backFromGuideBtn">← Назад</button>
+      <div id="guideContent"></div>
+    </div>
+  </div>
+
+  <!-- lesson 1 app -->
+  <div id="lessonApp">
+    <div class="app">
+      <aside class="rail">
+        <div class="brand" style="font-family:'Caveat',cursive;">Урок 1<small>Диагностика уровня</small></div>
+        <div class="trail"><div class="trail-fill" id="trailFill"></div></div>
+        <nav class="tabs" id="tabs"></nav>
+        <button class="topbtn" style="margin-top:16px; width:100%;" id="backToMenuBtn">← К урокам</button>
+      </aside>
+      <main>
+        <section class="page" data-page="0">
+          <div class="eyebrow">Часть 1 · 10 минут</div>
+          <h1 class="page-title">Знакомство и разговор</h1>
+          <p class="lead">Не переживай из-за ошибок — это просто способ понять, что ты уже знаешь. Отвечай своими словами прямо в полях ниже.</p>
+          <div class="card" id="warmupCard"><h3>Вопросы для разговора</h3></div>
+        </section>
+
+        <section class="page" data-page="1">
+          <div class="eyebrow">Часть 2 · 10 минут</div>
+          <h1 class="page-title">Диагностика грамматики</h1>
+          <p class="lead">Задание 1 проверяется автоматически. Задание 2 — впиши исправленный вариант и нажми «Проверить».</p>
+          <div class="score-badge" id="mcqScore">Задание 1: 0 / 5</div>
+          <div class="card" id="mcqCard"><h3>Задание 1. Выбери правильный вариант</h3></div>
+          <div class="score-badge" id="fixScore">Задание 2: 0 / 5</div>
+          <div class="card" id="fixCard"><h3>Задание 2. Исправь ошибки</h3></div>
+        </section>
+
+        <section class="page" data-page="2">
+          <div class="eyebrow">Часть 3 · 5 минут</div>
+          <h1 class="page-title">Словарный запас</h1>
+          <p class="lead">Нажми на карточку, чтобы перевернуть и увидеть перевод.</p>
+          <h3 style="color:var(--chalk-yellow); font-size:1.4rem;">Переведи на английский</h3>
+          <div class="flash-grid" id="flashRu"></div>
+          <h3 style="color:var(--chalk-yellow); font-size:1.4rem; margin-top:22px;">Переведи на русский</h3>
+          <div class="flash-grid" id="flashEn"></div>
+        </section>
+
+        <section class="page" data-page="3">
+          <div class="eyebrow">Часть 4 · 10 минут</div>
+          <h1 class="page-title">Чтение</h1>
+          <div class="reading-text">
+            My name is Kate. I am fifteen years old. I live in Moscow with my parents and younger brother. I enjoy reading books and watching films. My favourite subject at school is English because I want to travel in the future. Every weekend I meet my friends and we spend time together.
+          </div>
+          <div class="card" id="readingCard"><h3>Ответь на вопросы</h3></div>
+          <div class="card">
+            <h3>Расскажи своими словами</h3>
+            <p>Попробуй пересказать текст о Кейт вслух своими словами, не подглядывая — даже 3–4 предложения уже хороший результат.</p>
+          </div>
+        </section>
+
+        <section class="page" data-page="4">
+          <div class="eyebrow">Часть 5 · 15 минут</div>
+          <h1 class="page-title">Новая тема: Present Simple</h1>
+          <p class="lead">Present Simple — самое важное время в английском языке. Оно используется для привычек, фактов и регулярных действий.</p>
+          <div class="card">
+            <h3>Образование</h3>
+            <div class="theory-grid">
+              <div class="theory-col"><h4>Утверждение</h4><p>I / You / We / They play.</p><p>He / She / It plays.</p></div>
+              <div class="theory-col"><h4>Отрицание</h4><p>I don't play.</p><p>She doesn't play.</p></div>
+              <div class="theory-col"><h4>Вопрос</h4><p>Do you play tennis?</p><p>Does she play tennis?</p></div>
+            </div>
+            <div class="markers" id="markerChips"></div>
+          </div>
+          <div class="card">
+            <h3>Примеры</h3>
+            <p>I usually get up at 7.</p><p>She studies English every day.</p><p>My father works in an office.</p><p>We often watch films.</p>
+          </div>
+        </section>
+
+        <section class="page" data-page="5">
+          <div class="eyebrow">Практика по теме · 5 минут</div>
+          <h1 class="page-title">Раскрой скобки</h1>
+          <div class="score-badge" id="practiceScore">Правильно: 0 / 5</div>
+          <div class="card" id="practiceCard"></div>
+        </section>
+
+        <section class="page" data-page="6">
+          <div class="eyebrow">Устная практика · 5 минут</div>
+          <h1 class="page-title">Говорим полными предложениями</h1>
+          <p class="lead">Эти вопросы — для устного ответа вслух. Старайся отвечать полным предложением, а не одним словом.</p>
+          <div class="card" id="speakingCard"><h3>Вопросы</h3></div>
+          <div class="card">
+            <h3>Пример полного ответа</h3>
+            <p>Коротко: <em>— I like English.</em><br>Полно: <em>— I like English because it's interesting and useful.</em></p>
+          </div>
+        </section>
+
+        <section class="page" data-page="7">
+          <div class="eyebrow">Домашнее задание</div>
+          <h1 class="page-title">Задания на дом</h1>
+          <div class="card" id="hwGrammarCard"><h3>1. Грамматика — раскрой скобки</h3></div>
+          <div class="card"><h3>2. Письмо</h3><p>Написать 10–12 предложений о себе по плану:</p><ul class="homework-list" id="hwPlanList"></ul></div>
+          <div class="card"><h3>3. Слова для заучивания</h3><div class="markers" id="hwWords"></div></div>
+        </section>
+
+        <div class="footer-nav">
+          <button id="prevBtn">← Назад</button>
+          <button id="nextBtn">Далее →</button>
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<div class="savepill" id="savePill">Сохранено ✓</div>
+
+<script>
+/* ================= CONTENT DATA (Lesson 1) ================= */
+const pages = ["Знакомство","Грамматика","Слова","Чтение","Present Simple","Практика","Говорение","Дом. задание"];
+const warmupQs = ["What's your name?","How old are you?","What school do you go to?","What subjects do you like?","Do you have any hobbies?","What do you usually do after school?","What did you do yesterday?","What are your plans for this weekend?"];
+const mcq = [
+  {q:"She ___ my friend.", opts:["am","is","are"], correct:1},
+  {q:"We ___ English every week.", opts:["study","studies","studying"], correct:0},
+  {q:"My brother ___ football yesterday.", opts:["play","played","plays"], correct:1},
+  {q:"They ___ watching TV now.", opts:["am","is","are"], correct:2},
+  {q:"I ___ to the cinema tomorrow.", opts:["go","went","will go"], correct:2},
+];
+const fixItems = [
+  {wrong:"She go to school every day.", right:"She goes to school every day."},
+  {wrong:"I am play football now.", right:"I am playing football now."},
+  {wrong:"They is my classmates.", right:"They are my classmates."},
+  {wrong:"He watch TV yesterday.", right:"He watched TV yesterday."},
+  {wrong:"We goes to the park.", right:"We go to the park."},
+];
+const vocabRu = [
+  {front:"семья", back:"family"},{front:"школа", back:"school"},{front:"друг", back:"friend"},
+  {front:"книга", back:"book"},{front:"компьютер", back:"computer"},{front:"путешествовать", back:"to travel"},
+  {front:"интересный", back:"interesting"},{front:"красивый", back:"beautiful"},
+  {front:"свободное время", back:"free time"},{front:"домашнее задание", back:"homework"},
+];
+const vocabEn = [
+  {front:"hobby", back:"хобби"},{front:"neighbour", back:"сосед"},{front:"successful", back:"успешный"},
+  {front:"holiday", back:"праздник / каникулы"},{front:"improve", back:"улучшать"},
+  {front:"favourite", back:"любимый"},{front:"busy", back:"занятой"},{front:"future", back:"будущее"},
+];
+const readingQs = ["How old is Kate?","Where does she live?","Does she have any brothers or sisters?","What is her favourite subject?","Why does she like English?","What does she do at weekends?"];
+const markers = ["always","usually","often","sometimes","never","every day","every week"];
+const practiceItems = [
+  {pre:"I ", word:"(play)", post:" basketball every week.", accept:["play"]},
+  {pre:"She ", word:"(go)", post:" to school by bus.", accept:["goes"]},
+  {pre:"My friends ", word:"(watch)", post:" YouTube every day.", accept:["watch"]},
+  {pre:"He ", word:"(study)", post:" English after school.", accept:["studies"]},
+  {pre:"We ", word:"(not like)", post:" maths.", accept:["don't like","do not like"]},
+];
+const speakingQs = ["What time do you get up?","What do you usually have for breakfast?","Do you like English?","What do you do after school?","How often do you meet your friends?","What subjects do you like?"];
+const hwGrammar = [
+  {pre:"My sister ", word:"(read)", post:" books every evening.", accept:["reads"]},
+  {pre:"We ", word:"(go)", post:" to school five days a week.", accept:["go"]},
+  {pre:"He ", word:"(not play)", post:" football.", accept:["doesn't play","does not play"]},
+  {pre:"They ", word:"(watch)", post:" TV every weekend.", accept:["watch"]},
+  {pre:"She ", word:"(study)", post:" English after school.", accept:["studies"]},
+  {pre:"I ", word:"(not like)", post:" coffee.", accept:["don't like","do not like"]},
+  {pre:"My parents ", word:"(work)", post:" every day.", accept:["work"]},
+  {pre:"Tom ", word:"(have)", post:" a dog.", accept:["has"]},
+  {pre:"We ", word:"(not live)", post:" in London.", accept:["don't live","do not live"]},
+  {pre:"Kate ", word:"(do)", post:" her homework every evening.", accept:["does"]},
+];
+const hwPlan = ["name","age","city","family","favourite subjects","hobbies","friends","future dream"];
+const hwWords = ["hobby","future","favourite","improve","usually","often","sometimes","never","subject","travel"];
+
+const LESSONS = [
+  {id:"lesson1", title:"Урок 1", name:"Знакомство и Present Simple", desc:"Диагностика уровня: грамматика, словарный запас, чтение + первая тема.", locked:false},
+  {id:"lesson2", title:"Урок 2", name:"Скоро", desc:"Появится после следующего занятия.", locked:true},
+  {id:"lesson3", title:"Урок 3", name:"Скоро", desc:"Появится после следующего занятия.", locked:true},
+];
+const LESSON1_TOTAL = mcq.length + fixItems.length + practiceItems.length; // 15
+
+/* ================= STATE ================= */
+let currentStudent = null;   // {key, name, data}
+let currentPage = 0;
+const visited = new Set();
+let saveTimer = null;
+
+/* ================= STORAGE HELPERS ================= */
+function storageAvailable(){
+  return typeof window.storage !== 'undefined' && window.storage !== null;
+}
+function slugify(raw){
+  // Storage keys can't contain whitespace, slashes, or quotes — normalize names into a safe key.
+  return raw.trim().toLowerCase()
+    .replace(/['"]/g,'')
+    .replace(/[\/\\]/g,'-')
+    .replace(/\s+/g,'_');
+}
+async function storageGet(key, shared){
+  if(!storageAvailable()) return { ok:false, error:'no-storage', value:null };
+  try{
+    const r = await window.storage.get(key, shared);
+    return { ok:true, value: r ? JSON.parse(r.value) : null };
+  }catch(e){
+    // A missing key throws rather than returning null — treat as "not found", not a failure.
+    return { ok:true, value:null };
+  }
+}
+async function storageSet(key, value, shared){
+  if(!storageAvailable()) return { ok:false, error:'no-storage' };
+  try{
+    const r = await window.storage.set(key, JSON.stringify(value), shared);
+    if(!r) return { ok:false, error:'empty-response' };
+    return { ok:true };
+  }catch(e){
+    return { ok:false, error: (e && e.message) ? e.message : String(e) };
+  }
+}
+async function storageListKeys(prefix, shared){
+  if(!storageAvailable()) return [];
+  try{
+    const r = await window.storage.list(prefix, shared);
+    return r ? r.keys : [];
+  }catch(e){ return []; }
+}
+function friendlyStorageError(err){
+  if(err === 'no-storage') return 'Хранилище недоступно в этом окне просмотра. Открой тетрадь по ссылке-артефакту из чата Claude — сохранение работает только там, не в скачанном файле, открытом отдельно.';
+  return 'Не удалось сохранить (' + err + '). Проверь соединение и попробуй ещё раз.';
+}
+
+function blankLessonProgress(){
+  return {
+    warmup:{}, mcqScore:0, mcqAnswered:{}, mcqChoice:{}, fixScore:0, fixAnswers:{}, teacherNotes:"",
+    reading:{}, practiceScore:0, practiceAnswers:{}, hwAnswers:{}, hwPlanChecked:{},
+    lastPage:0, updatedAt:null
+  };
+}
+
+/* ================= GATE LOGIC ================= */
+document.querySelectorAll('.gate-tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.gate-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    const role = t.dataset.role;
+    document.getElementById('studentForm').classList.toggle('hidden', role!=='student');
+    document.getElementById('teacherForm').classList.toggle('hidden', role!=='teacher');
+    if(role==='teacher') refreshTeacherHint();
+  });
+});
+
+async function refreshTeacherHint(){
+  const r = await storageGet('teacher:main', true);
+  if(!r.ok){ document.getElementById('tHint').textContent = friendlyStorageError(r.error); return; }
+  document.getElementById('tHint').textContent = r.value
+    ? "Введи PIN преподавателя, который ты уже задавал(а) раньше."
+    : "Панель открывается впервые — придумай PIN преподавателя, он сохранится для всех будущих входов.";
+}
+
+document.getElementById('stEnterBtn').addEventListener('click', studentLogin);
+document.getElementById('stPin').addEventListener('keydown', e=>{ if(e.key==='Enter') studentLogin(); });
+document.getElementById('stName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('stPin').focus(); });
+document.getElementById('stPin').addEventListener('input', e=>{ e.target.value = e.target.value.replace(/\D/g,'').slice(0,6); });
+
+let studentLoginBusy = false;
+async function studentLogin(){
+  if(studentLoginBusy) return;
+  const nameRaw = document.getElementById('stName').value.trim();
+  const pin = document.getElementById('stPin').value.trim();
+  const msg = document.getElementById('stMsg');
+  const btn = document.getElementById('stEnterBtn');
+  msg.className = 'gate-msg';
+  if(!nameRaw){ msg.textContent = 'Введи имя.'; msg.classList.add('err'); return; }
+  if(pin.length < 4){ msg.textContent = 'PIN должен быть минимум 4 цифры.'; msg.classList.add('err'); return; }
+  if(!storageAvailable()){ msg.textContent = friendlyStorageError('no-storage'); msg.classList.add('err'); return; }
+
+  studentLoginBusy = true;
+  btn.disabled = true; btn.textContent = 'Входим...';
+  try{
+    const key = 'student:' + slugify(nameRaw);
+    const got = await storageGet(key, true);
+    if(!got.ok){ msg.textContent = friendlyStorageError(got.error); msg.classList.add('err'); return; }
+    let rec = got.value;
+
+    if(!rec){
+      rec = { name:nameRaw, pin:pin, createdAt:new Date().toISOString(), lessons:{ lesson1: blankLessonProgress() } };
+      const res = await storageSet(key, rec, true);
+      if(!res.ok){ msg.textContent = friendlyStorageError(res.error); msg.classList.add('err'); return; }
+      msg.textContent = 'Профиль создан! Заходим...';
+      msg.classList.add('ok');
+    } else {
+      if(rec.pin !== pin){ msg.textContent = 'Неверный PIN для этого имени. Если забыл(а) — попроси преподавателя сбросить PIN.'; msg.classList.add('err'); return; }
+      if(!rec.lessons) rec.lessons = {};
+      if(!rec.lessons.lesson1) rec.lessons.lesson1 = blankLessonProgress();
+    }
+
+    currentStudent = { key, data: rec };
+    enterShell();
+  } finally {
+    studentLoginBusy = false;
+    btn.disabled = false; btn.textContent = 'Войти';
+  }
+}
+
+document.getElementById('tEnterBtn').addEventListener('click', teacherLogin);
+document.getElementById('tPin').addEventListener('keydown', e=>{ if(e.key==='Enter') teacherLogin(); });
+
+let teacherLoginBusy = false;
+async function teacherLogin(){
+  if(teacherLoginBusy) return;
+  const pin = document.getElementById('tPin').value.trim();
+  const msg = document.getElementById('tMsg');
+  const btn = document.getElementById('tEnterBtn');
+  msg.className = 'gate-msg';
+  if(!pin){ msg.textContent = 'Введи PIN.'; msg.classList.add('err'); return; }
+  if(!storageAvailable()){ msg.textContent = friendlyStorageError('no-storage'); msg.classList.add('err'); return; }
+
+  teacherLoginBusy = true;
+  btn.disabled = true; btn.textContent = 'Входим...';
+  try{
+    const got = await storageGet('teacher:main', true);
+    if(!got.ok){ msg.textContent = friendlyStorageError(got.error); msg.classList.add('err'); return; }
+    let rec = got.value;
+    if(!rec){
+      rec = { pin, createdAt:new Date().toISOString() };
+      const res = await storageSet('teacher:main', rec, true);
+      if(!res.ok){ msg.textContent = friendlyStorageError(res.error); msg.classList.add('err'); return; }
+      msg.textContent = 'PIN сохранён. Входим в панель...';
+      msg.classList.add('ok');
+    } else {
+      if(rec.pin !== pin){ msg.textContent = 'Неверный PIN преподавателя.'; msg.classList.add('err'); return; }
+    }
+    enterShell(true);
+  } finally {
+    teacherLoginBusy = false;
+    btn.disabled = false; btn.textContent = 'Войти в панель';
+  }
+}
+
+/* ================= SHELL ================= */
+function enterShell(isTeacher){
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('shell').style.display = 'block';
+  document.getElementById('logoutBtn').addEventListener('click', ()=> location.reload());
+
+  if(isTeacher){
+    document.getElementById('whoami').innerHTML = 'Панель преподавателя';
+    document.getElementById('menuScreen').style.display = 'none';
+    document.getElementById('teacherScreen').style.display = 'block';
+    loadTeacherTable();
+  } else {
+    document.getElementById('whoami').innerHTML = `Ученик: <b>${currentStudent.data.name}</b>`;
+    buildLessonMenu();
+  }
+}
+
+/* ================= LESSON MENU ================= */
+function buildLessonMenu(){
+  const grid = document.getElementById('lessonGrid');
+  grid.innerHTML = '';
+  LESSONS.forEach(l=>{
+    const card = document.createElement('div');
+    card.className = 'lesson-card' + (l.locked ? ' locked' : '');
+    let progressHtml = '';
+    if(!l.locked){
+      const prog = currentStudent.data.lessons[l.id] || blankLessonProgress();
+      const score = prog.mcqScore + prog.fixScore + prog.practiceScore;
+      const pct = Math.round((score / LESSON1_TOTAL) * 100);
+      progressHtml = `
+        <div class="lesson-progress-bar"><div class="lesson-progress-fill" style="width:${pct}%"></div></div>
+        <div class="lesson-progress-label">${score} / ${LESSON1_TOTAL} баллов${prog.updatedAt ? ' · обновлено' : ' · не начато'}</div>`;
+    }
+    card.innerHTML = `
+      <div class="lesson-num">${l.title}</div>
+      <div class="lesson-name">${l.name}</div>
+      <div class="lesson-desc">${l.desc}</div>
+      ${progressHtml}`;
+    if(!l.locked){
+      card.addEventListener('click', ()=> openLesson(l.id));
+    }
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('backToMenuBtn').addEventListener('click', ()=>{
+  document.getElementById('lessonApp').style.display = 'none';
+  document.getElementById('menuScreen').style.display = 'block';
+  buildLessonMenu();
+});
+
+/* ================= LESSON 1 APP ================= */
+let lessonBuilt = false;
+function openLesson(id){
+  if(id !== 'lesson1') return;
+  document.getElementById('menuScreen').style.display = 'none';
+  document.getElementById('lessonApp').style.display = 'block';
+  if(!lessonBuilt){ buildLessonUI(); lessonBuilt = true; }
+  restoreLessonState();
+  goTo(currentStudent.data.lessons.lesson1.lastPage || 0);
+}
+
+function buildLessonUI(){
+  const tabsEl = document.getElementById('tabs');
+  pages.forEach((label,i)=>{
+    const t = document.createElement('div');
+    t.className = 'tab' + (i===0?' active':'');
+    t.dataset.index = i;
+    t.innerHTML = `<span class="num">${i+1}</span><span>${label}</span>`;
+    t.addEventListener('click', ()=>goTo(i));
+    tabsEl.appendChild(t);
+  });
+  document.getElementById('prevBtn').addEventListener('click', ()=> currentPage>0 && goTo(currentPage-1));
+  document.getElementById('nextBtn').addEventListener('click', ()=> currentPage<pages.length-1 && goTo(currentPage+1));
+
+  // warm-up
+  const warmupCard = document.getElementById('warmupCard');
+  warmupQs.forEach((q,i)=>{
+    const row = document.createElement('div');
+    row.className = 'warmup-item';
+    row.innerHTML = `<span class="qn">${i+1}.</span><div style="flex:1;"><div>${q}</div><input type="text" data-key="w${i}" placeholder="ответ ученицы..."></div>`;
+    warmupCard.appendChild(row);
+  });
+  warmupCard.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      currentStudent.data.lessons.lesson1.warmup[inp.dataset.key] = inp.value;
+      scheduleSave();
+    });
+  });
+
+  // mcq
+  const mcqCard = document.getElementById('mcqCard');
+  mcq.forEach((item,i)=>{
+    const wrap = document.createElement('div');
+    wrap.className = 'mcq';
+    wrap.dataset.qi = i;
+    const optsHtml = item.opts.map((o,oi)=>`<button class="opt" data-oi="${oi}">${o}</button>`).join('');
+    wrap.innerHTML = `<div class="qtext">${i+1}. ${item.q}</div><div class="opts">${optsHtml}</div>`;
+    mcqCard.appendChild(wrap);
+    wrap.querySelectorAll('.opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(wrap.dataset.answered) return;
+        answerMcq(i, +btn.dataset.oi, wrap);
+      });
+    });
+  });
+
+  // fix
+  const fixCard = document.getElementById('fixCard');
+  fixItems.forEach((item,i)=>{
+    const row = document.createElement('div');
+    row.className = 'fillrow'; row.style.flexDirection='column'; row.style.alignItems='stretch';
+    row.dataset.qi = i;
+    row.innerHTML = `
+      <div class="prompt">${i+1}. ${item.wrong}</div>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input type="text" placeholder="исправленный вариант">
+        <button class="checkbtn">Проверить</button>
+        <button class="revealbtn">Показать ответ</button>
+        <span class="answer-reveal">${item.right}</span>
+      </div>`;
+    fixCard.appendChild(row);
+    const input = row.querySelector('input');
+    row.querySelector('.checkbtn').addEventListener('click', ()=> checkFix(i, input, row));
+    row.querySelector('.revealbtn').addEventListener('click', ()=> row.querySelector('.answer-reveal').classList.toggle('show'));
+  });
+
+  // flashcards
+  buildFlash(document.getElementById('flashRu'), vocabRu);
+  buildFlash(document.getElementById('flashEn'), vocabEn);
+
+  // reading
+  const readingCard = document.getElementById('readingCard');
+  readingQs.forEach((q,i)=>{
+    const row = document.createElement('div');
+    row.className = 'warmup-item';
+    row.innerHTML = `<span class="qn">${i+1}.</span><div style="flex:1;"><div>${q}</div><input type="text" data-key="r${i}" placeholder="ответ ученицы..."></div>`;
+    readingCard.appendChild(row);
+  });
+  readingCard.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      currentStudent.data.lessons.lesson1.reading[inp.dataset.key] = inp.value;
+      scheduleSave();
+    });
+  });
+  // markers
+  const markerChips = document.getElementById('markerChips');
+  markers.forEach(m=>{ const c=document.createElement('span'); c.className='marker-chip'; c.textContent=m; markerChips.appendChild(c); });
+
+  // practice
+  buildPractice(document.getElementById('practiceCard'), practiceItems, 'practice');
+
+  // speaking
+  const speakingCard = document.getElementById('speakingCard');
+  speakingQs.forEach((q,i)=>{ const p=document.createElement('p'); p.innerHTML=`<b>${i+1}.</b> ${q}`; speakingCard.appendChild(p); });
+
+  // homework
+  buildPractice(document.getElementById('hwGrammarCard'), hwGrammar, 'hw');
+  const hwPlanList = document.getElementById('hwPlanList');
+  hwPlan.forEach((item,i)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<input type="checkbox" id="hp${i}" data-key="p${i}"><label class="hw-label" for="hp${i}">${item}</label>`;
+    li.querySelector('input').addEventListener('change', e=>{
+      li.querySelector('label').classList.toggle('checked', e.target.checked);
+      currentStudent.data.lessons.lesson1.hwPlanChecked[e.target.dataset.key] = e.target.checked;
+      scheduleSave();
+    });
+    hwPlanList.appendChild(li);
+  });
+  const hwWordsEl = document.getElementById('hwWords');
+  hwWords.forEach(w=>{ const c=document.createElement('span'); c.className='marker-chip'; c.textContent=w; hwWordsEl.appendChild(c); });
+}
+
+function buildFlash(container, data){
+  data.forEach(item=>{
+    const card = document.createElement('div');
+    card.className = 'flash';
+    card.innerHTML = `<div class="front">${item.front}</div><div class="back">${item.back}</div><div class="hint">нажми, чтобы перевернуть</div>`;
+    card.addEventListener('click', ()=> card.classList.toggle('flipped'));
+    container.appendChild(card);
+  });
+}
+
+function buildPractice(container, items, prefix){
+  items.forEach((item,i)=>{
+    const row = document.createElement('div');
+    row.className = 'fillrow';
+    row.dataset.qi = i;
+    row.innerHTML = `
+      <div class="prompt">${i+1}. ${item.pre}<b>${item.word}</b>${item.post}</div>
+      <input type="text" placeholder="форма глагола">
+      <button class="checkbtn">✓</button>
+      <button class="revealbtn">Ответ</button>
+      <span class="answer-reveal">${item.accept[0]}</span>`;
+    container.appendChild(row);
+    const input = row.querySelector('input');
+    row.querySelector('.checkbtn').addEventListener('click', ()=> checkPractice(prefix, i, item, input, row));
+    row.querySelector('.revealbtn').addEventListener('click', ()=> row.querySelector('.answer-reveal').classList.toggle('show'));
+  });
+}
+
+function norm(s){ return s.trim().toLowerCase().replace(/[.!?]+$/,'').replace(/\s+/g,' '); }
+
+function answerMcq(i, oi, wrap){
+  wrap.dataset.answered = '1';
+  const item = mcq[i];
+  wrap.querySelectorAll('.opt').forEach(b=>b.classList.add('disabled'));
+  const prog = currentStudent.data.lessons.lesson1;
+  const wasCorrect = prog.mcqAnswered['m'+i] === true;
+  prog.mcqChoice['m'+i] = oi;
+  if(oi === item.correct){
+    wrap.querySelector(`.opt[data-oi="${oi}"]`).classList.add('correct');
+    if(!wasCorrect){ prog.mcqScore++; prog.mcqAnswered['m'+i] = true; }
+  } else {
+    wrap.querySelector(`.opt[data-oi="${oi}"]`).classList.add('wrong');
+    wrap.querySelector(`.opt[data-oi="${item.correct}"]`).classList.add('correct');
+    prog.mcqAnswered['m'+i] = false;
+  }
+  document.getElementById('mcqScore').textContent = `Задание 1: ${prog.mcqScore} / ${mcq.length}`;
+  scheduleSave();
+}
+
+function checkFix(i, input, row){
+  const item = fixItems[i];
+  const ok = norm(input.value) === norm(item.right);
+  input.classList.remove('ok','bad'); input.classList.add(ok?'ok':'bad');
+  const prog = currentStudent.data.lessons.lesson1;
+  const already = prog.fixAnswers['f'+i];
+  if(!already || already.ok !== true){
+    if(ok && (!already || !already.counted)){ prog.fixScore++; }
+  }
+  prog.fixAnswers['f'+i] = { value:input.value, ok, counted:true };
+  document.getElementById('fixScore').textContent = `Задание 2: ${prog.fixScore} / ${fixItems.length}`;
+  scheduleSave();
+}
+
+function checkPractice(prefix, i, item, input, row){
+  const ok = item.accept.some(a=>norm(a)===norm(input.value));
+  input.classList.remove('ok','bad'); input.classList.add(ok?'ok':'bad');
+  const prog = currentStudent.data.lessons.lesson1;
+  if(prefix === 'practice'){
+    const key = 'p'+i;
+    const already = prog.practiceAnswers[key];
+    if(ok && (!already || !already.counted)){ prog.practiceScore++; }
+    prog.practiceAnswers[key] = { value:input.value, ok, counted:true };
+    document.getElementById('practiceScore').textContent = `Правильно: ${prog.practiceScore} / ${practiceItems.length}`;
+  } else {
+    prog.hwAnswers['h'+i] = { value:input.value, ok };
+  }
+  scheduleSave();
+}
+
+/* ---- navigation ---- */
+function updateTrail(){
+  const pct = Math.round((visited.size / pages.length) * 100);
+  document.getElementById('trailFill').style.width = pct + '%';
+}
+function goTo(i){
+  currentPage = i;
+  visited.add(i);
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', +p.dataset.page===i));
+  document.querySelectorAll('.tab').forEach(t=>{
+    const idx = +t.dataset.index;
+    t.classList.toggle('active', idx===i);
+    t.classList.toggle('done', visited.has(idx) && idx!==i);
+  });
+  document.getElementById('prevBtn').disabled = i===0;
+  document.getElementById('nextBtn').disabled = i===pages.length-1;
+  document.getElementById('nextBtn').textContent = i===pages.length-1 ? 'Готово ✓' : 'Далее →';
+  updateTrail();
+  currentStudent.data.lessons.lesson1.lastPage = i;
+  scheduleSave();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ---- restore saved state into the DOM ---- */
+function restoreLessonState(){
+  const prog = currentStudent.data.lessons.lesson1;
+  document.querySelectorAll('#warmupCard input').forEach(inp=>{ if(prog.warmup[inp.dataset.key]) inp.value = prog.warmup[inp.dataset.key]; });
+  document.querySelectorAll('#readingCard input').forEach(inp=>{ if(prog.reading[inp.dataset.key]) inp.value = prog.reading[inp.dataset.key]; });
+  document.querySelectorAll('#mcqCard .mcq').forEach(wrap=>{
+    const i = +wrap.dataset.qi;
+    const ans = prog.mcqAnswered['m'+i];
+    if(ans !== undefined){
+      wrap.dataset.answered = '1';
+      wrap.querySelectorAll('.opt').forEach(b=>b.classList.add('disabled'));
+      const item = mcq[i];
+      wrap.querySelector(`.opt[data-oi="${item.correct}"]`).classList.add('correct');
+      const chosen = prog.mcqChoice['m'+i];
+      if(ans === false && chosen !== undefined){
+        wrap.querySelector(`.opt[data-oi="${chosen}"]`).classList.add('wrong');
+      }
+    }
+  });
+  document.getElementById('mcqScore').textContent = `Задание 1: ${prog.mcqScore} / ${mcq.length}`;
+
+  document.querySelectorAll('#fixCard .fillrow').forEach(row=>{
+    const i = +row.dataset.qi;
+    const saved = prog.fixAnswers['f'+i];
+    if(saved){
+      const input = row.querySelector('input');
+      input.value = saved.value;
+      input.classList.add(saved.ok ? 'ok' : 'bad');
+    }
+  });
+  document.getElementById('fixScore').textContent = `Задание 2: ${prog.fixScore} / ${fixItems.length}`;
+
+  document.querySelectorAll('#practiceCard .fillrow').forEach(row=>{
+    const i = +row.dataset.qi;
+    const saved = prog.practiceAnswers['p'+i];
+    if(saved){
+      const input = row.querySelector('input');
+      input.value = saved.value;
+      input.classList.add(saved.ok ? 'ok' : 'bad');
+    }
+  });
+  document.getElementById('practiceScore').textContent = `Правильно: ${prog.practiceScore} / ${practiceItems.length}`;
+
+  document.querySelectorAll('#hwGrammarCard .fillrow').forEach(row=>{
+    const i = +row.dataset.qi;
+    const saved = prog.hwAnswers['h'+i];
+    if(saved){
+      const input = row.querySelector('input');
+      input.value = saved.value;
+      input.classList.add(saved.ok ? 'ok' : 'bad');
+    }
+  });
+
+  document.querySelectorAll('#hwPlanList input[type=checkbox]').forEach(cb=>{
+    const key = cb.dataset.key;
+    if(prog.hwPlanChecked[key]){
+      cb.checked = true;
+      cb.nextElementSibling.classList.add('checked');
+    }
+  });
+}
+
+/* ---- autosave ---- */
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 700);
+}
+async function doSave(){
+  if(!currentStudent) return;
+  currentStudent.data.lessons.lesson1.updatedAt = new Date().toISOString();
+  const res = await storageSet(currentStudent.key, currentStudent.data, true);
+  const pill = document.getElementById('savePill');
+  if(res.ok){
+    pill.textContent = 'Сохранено ✓';
+    pill.classList.remove('err');
+  } else {
+    pill.textContent = 'Не сохранено — ' + (res.error==='no-storage' ? 'нет связи с хранилищем' : 'ошибка');
+    pill.classList.add('err');
+  }
+  pill.classList.add('show');
+  clearTimeout(doSave._hideTimer);
+  doSave._hideTimer = setTimeout(()=> pill.classList.remove('show'), res.ok ? 1200 : 4000);
+}
+// flush pending changes immediately if the student switches tabs or closes the page
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'hidden' && currentStudent && saveTimer){
+    clearTimeout(saveTimer);
+    doSave();
+  }
+});
+
+/* ================= TEACHER DASHBOARD ================= */
+let teacherRowsCache = [];
+
+async function loadTeacherTable(){
+  showTeacherView('list');
+  const wrap = document.getElementById('teacherTableWrap');
+  const statsEl = document.getElementById('teacherStats');
+  wrap.innerHTML = '<div class="t-empty">Загрузка...</div>';
+  statsEl.innerHTML = '';
+  const keys = await storageListKeys('student:', true);
+  if(!keys.length){
+    wrap.innerHTML = '<div class="t-empty">Пока ни один ученик не заходил в тетрадь.</div>';
+    return;
+  }
+  const rows = [];
+  for(const k of keys){
+    const rec = await storageGet(k, true);
+    if(!rec) continue;
+    const prog = (rec.lessons && rec.lessons.lesson1) || blankLessonProgress();
+    const score = prog.mcqScore + prog.fixScore + prog.practiceScore;
+    rows.push({ key:k, name: rec.name, score, total: LESSON1_TOTAL, updatedAt: prog.updatedAt, lastPage: prog.lastPage, started: !!prog.updatedAt });
+  }
+  rows.sort((a,b)=> (b.updatedAt||'').localeCompare(a.updatedAt||''));
+  teacherRowsCache = rows;
+
+  const started = rows.filter(r=>r.started);
+  const avg = started.length ? Math.round(started.reduce((s,r)=>s+r.score,0) / started.length * 10)/10 : 0;
+  statsEl.innerHTML = `
+    <div class="t-stat"><div class="num">${rows.length}</div><div class="lbl">учеников</div></div>
+    <div class="t-stat"><div class="num">${started.length}</div><div class="lbl">начали урок 1</div></div>
+    <div class="t-stat"><div class="num">${avg} / ${LESSON1_TOTAL}</div><div class="lbl">средний балл</div></div>`;
+
+  let html = `<table class="t-table"><thead><tr>
+    <th>Ученик</th><th>Урок 1 — баллы</th><th>Страница</th><th>Последняя активность</th>
+  </tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    const when = r.updatedAt ? new Date(r.updatedAt).toLocaleString('ru-RU') : '— ещё не начал(а)';
+    html += `<tr class="clickable" data-idx="${i}"><td>${r.name}</td><td>${r.score} / ${r.total}</td><td>${(r.lastPage||0)+1} / ${pages.length}</td><td>${when}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('tr.clickable').forEach(tr=>{
+    tr.addEventListener('click', ()=> openStudentDetail(teacherRowsCache[+tr.dataset.idx].key));
+  });
+}
+
+function showTeacherView(which){
+  document.getElementById('teacherListView').classList.toggle('hidden', which!=='list');
+  document.getElementById('teacherDetailView').classList.toggle('hidden', which!=='detail');
+  document.getElementById('teacherGuideView').classList.toggle('hidden', which!=='guide');
+}
+
+document.getElementById('backToTableBtn').addEventListener('click', ()=> showTeacherView('list'));
+document.getElementById('openGuideBtn').addEventListener('click', ()=>{ buildGuideContent(); showTeacherView('guide'); });
+document.getElementById('backFromGuideBtn').addEventListener('click', ()=> showTeacherView('list'));
+
+let detailStudentKey = null;
+
+async function openStudentDetail(key){
+  detailStudentKey = key;
+  const rec = await storageGet(key, true);
+  if(!rec){ showTeacherView('list'); return; }
+  const prog = (rec.lessons && rec.lessons.lesson1) || blankLessonProgress();
+  const score = prog.mcqScore + prog.fixScore + prog.practiceScore;
+  const el = document.getElementById('detailContent');
+
+  const rowsHtml = (label, arr) => arr.map((r,i)=>`
+    <div class="d-row"><div class="d-q">${i+1}. ${r.q}</div><div class="d-a ${r.cls}">${r.val}</div></div>`).join('');
+
+  const warmupRows = warmupQs.map((q,i)=>({ q, val: prog.warmup['w'+i] || '—', cls: prog.warmup['w'+i] ? '' : 'empty' }));
+  const readingRows = readingQs.map((q,i)=>({ q, val: prog.reading['r'+i] || '—', cls: prog.reading['r'+i] ? '' : 'empty' }));
+  const mcqRows = mcq.map((item,i)=>{
+    const ans = prog.mcqAnswered['m'+i];
+    const choice = prog.mcqChoice['m'+i];
+    const val = ans===undefined ? '—' : (choice!==undefined ? item.opts[choice] : (ans?'верно':'неверно'));
+    return { q: item.q, val, cls: ans===undefined?'empty':(ans?'ok':'bad') };
+  });
+  const fixRows = fixItems.map((item,i)=>{
+    const saved = prog.fixAnswers['f'+i];
+    return { q: item.wrong, val: saved ? saved.value : '—', cls: !saved?'empty':(saved.ok?'ok':'bad') };
+  });
+  const practiceRows = practiceItems.map((item,i)=>{
+    const saved = prog.practiceAnswers['p'+i];
+    return { q: `${item.pre}${item.word}${item.post}`, val: saved ? saved.value : '—', cls: !saved?'empty':(saved.ok?'ok':'bad') };
+  });
+  const hwRows = hwGrammar.map((item,i)=>{
+    const saved = prog.hwAnswers['h'+i];
+    return { q: `${item.pre}${item.word}${item.post}`, val: saved ? saved.value : '—', cls: !saved?'empty':(saved.ok?'ok':'bad') };
+  });
+  const planDone = hwPlan.filter((_,i)=> prog.hwPlanChecked['p'+i]).length;
+
+  el.innerHTML = `
+    <div class="detail-header">
+      <h2>${rec.name}</h2>
+      <span class="detail-score">Урок 1: ${score} / ${LESSON1_TOTAL} баллов · страница ${(prog.lastPage||0)+1} / ${pages.length}</span>
+    </div>
+
+    <div class="d-section"><h3>1. Знакомство и разговор</h3>${rowsHtml('w', warmupRows)}</div>
+    <div class="d-section"><h3>2. Грамматика — Задание 1 (${prog.mcqScore}/${mcq.length})</h3>${rowsHtml('m', mcqRows)}</div>
+    <div class="d-section"><h3>2. Грамматика — Задание 2 (${prog.fixScore}/${fixItems.length})</h3>${rowsHtml('f', fixRows)}</div>
+    <div class="d-section"><h3>4. Чтение — понимание текста</h3>${rowsHtml('r', readingRows)}</div>
+    <div class="d-section">
+      <h3>Заметки о пересказе (для преподавателя)</h3>
+      <textarea class="d-note" id="teacherNoteInput" placeholder="Например: пересказала 4 предложения, путает 3-е лицо...">${prog.teacherNotes || ''}</textarea>
+      <button class="checkbtn" id="saveNoteBtn" style="margin-top:8px;">Сохранить заметку</button>
+      <span class="answer-reveal" id="noteSavedMsg">Сохранено ✓</span>
+    </div>
+    <div class="d-section"><h3>6. Практика Present Simple (${prog.practiceScore}/${practiceItems.length})</h3>${rowsHtml('p', practiceRows)}</div>
+    <div class="d-section"><h3>Домашнее задание — грамматика</h3>${rowsHtml('h', hwRows)}</div>
+    <div class="d-section"><h3>Домашнее задание — план письма</h3><p style="margin:0; font-family:'JetBrains Mono',monospace; font-size:0.85rem;">Отмечено пунктов: ${planDone} / ${hwPlan.length}</p></div>
+  `;
+  document.getElementById('saveNoteBtn').addEventListener('click', async ()=>{
+    prog.teacherNotes = document.getElementById('teacherNoteInput').value;
+    rec.lessons.lesson1 = prog;
+    await storageSet(key, rec, true);
+    const msg = document.getElementById('noteSavedMsg');
+    msg.classList.add('show');
+    setTimeout(()=> msg.classList.remove('show'), 1400);
+  });
+  showTeacherView('detail');
+}
+
+/* ---- teacher lesson script (moved out of student view) ---- */
+function buildGuideContent(){
+  const el = document.getElementById('guideContent');
+  el.innerHTML = `
+    <h2 class="menu-title" style="margin-bottom:18px;">Конспект урока 1</h2>
+    <div class="guide-card">
+      <h3>Вступление</h3>
+      <p>Прочитай ученице вслух перед началом:</p>
+      <div class="guide-say">"Hi! Today we're going to speak English as much as possible. Don't worry about mistakes. I just want to see what you already know."</div>
+    </div>
+    <div class="guide-card">
+      <h3>Тема: Present Simple</h3>
+      <p>Перед объяснением темы можно сказать:</p>
+      <div class="guide-say">"Present Simple — самое важное время в английском языке. Мы используем его для привычек, фактов и регулярных действий."</div>
+    </div>
+    <div class="guide-card">
+      <h3>Как расширять короткий устный ответ</h3>
+      <p>Если ученица отвечает одним словом, используй наводящие вопросы:</p>
+      <p style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; line-height:1.7;">
+        — I like English.<br>— Why?<br>— Because it's interesting.<br>— Can you say a full sentence?<br>— <em>I like English because it's interesting and useful.</em>
+      </p>
+    </div>
+    <div class="guide-card">
+      <h3>Что отмечать в разговоре (Часть 1)</h3>
+      <p>Отвечает одним словом или предложениями; понимает вопрос сразу или после перевода; знает ли времена; насколько большой словарный запас.</p>
+    </div>
+    <div class="guide-card">
+      <h3>Пересказ текста о Кейт</h3>
+      <p>Попроси рассказать о Кейт своими словами — даже 3–4 предложения уже дадут понимание уровня. Заметки об этом можно оставить в карточке ученика на панели преподавателя.</p>
+    </div>
+    <div class="guide-card">
+      <h3>Итог урока</h3>
+      <p>После такого урока можно довольно точно определить: чтение, словарный запас, знание времён, умение говорить, понимание грамматики, примерный уровень (A1, A2 или выше).</p>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
